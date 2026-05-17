@@ -2,13 +2,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-#Re 10, 0.01 m/s, N 4, 0.7, 0.3, massImbalance < 1e-10
-#Re 10, 0.01 m/s, N 8, 0.7, 0.1, massImbalance < 1e-10
-#Re 10, 0.01 m/s, N 16, 0.7, 0.025, massImbalance < 1e-6
+#Re 10, 0.01 m/s, N 4, u_rel 0.7, p_rel 0.3, massImbalance < 1e-10
+#Re 10, 0.01 m/s, N 8, u_rel 0.7, p_rel 0.1, massImbalance < 1e-10
+#Re 10, 0.01 m/s, N 16, u_rel 0.7, p_rel 0.025, massImbalance < 1e-6
 
-#Re 50, len 0.05 , N 8, 0.7, 0.025, massImbalance < 1e-6
-#Re 50, len 0.05 , N 16, 0.7, 0.025, massImbalance < 1e-6
-#Re 75, 0.075 m/s , N 8/16, 0.7, 0.025, massImbalance < 1e-6
+#Re 50, len 0.05 , N 8, u_rel 0.7, p_rel 0.025, massImbalance < 1e-6
+#Re 50, len 0.05 , N 16, u_rel 0.7, p_rel 0.025, massImbalance < 1e-6
+#Re 75, 0.075 m/s , N 8/16, u_rel 0.7, p_rel 0.025, massImbalance < 1e-6
 
 uLid = 0.075 # lid velocity = 1 cm/s
 N = 16 # no of cells in each direction
@@ -22,7 +22,7 @@ nu = 1e-5 # kinematic viscosity
 Re = (len*uLid)/nu
 
 u_rel = 0.7
-pr_rel = 0.025
+p_rel = 0.025
 tol = 1e-6
 
 #create arrays and initialize
@@ -331,7 +331,7 @@ for loop in range(outer):
 
     #STEP 3: updating the values
     #p
-    p_new = p + pr_rel*pPrime
+    p_new = p + p_rel*pPrime
 
     #u, v
     a0 = a0.reshape(N, N)
@@ -490,6 +490,5 @@ plt.xlim(0, len)
 plt.ylim(0, len)
 plt.title(f'Velocity Vectors (Re = {Re}, Grid = {N}x{N})')
 plt.show()
-
 
 
