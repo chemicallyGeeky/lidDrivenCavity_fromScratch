@@ -1,4 +1,4 @@
-#lid driven cavity with SIMPLE and PWIM, Re 10-75, 4x4-16x16 mesh, explicit relaxation
+#lid driven cavity with SIMPLE and PWIM, Re 10-75, 4x4-16x16 mesh, explicit relaxation, dense matrix
 import numpy as np
 import matplotlib.pyplot as plt
 
