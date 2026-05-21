@@ -1,6 +1,5 @@
 #lid driven cavity with SIMPLE and PWIM, Re 10-75, 4x4-16x16 mesh, explicit relaxation, dense matrix
-import numpy as np
-import matplotlib.pyplot as plt
+#for explicit relaxation, different relaxation factors must be used with different Re and grids
 
 #Re 10, 0.01 m/s, N 4, u_rel 0.7, p_rel 0.3, massImbalance < 1e-10
 #Re 10, 0.01 m/s, N 8, u_rel 0.7, p_rel 0.1, massImbalance < 1e-10
@@ -9,6 +8,9 @@ import matplotlib.pyplot as plt
 #Re 50, len 0.05 , N 8, u_rel 0.7, p_rel 0.025, massImbalance < 1e-6
 #Re 50, len 0.05 , N 16, u_rel 0.7, p_rel 0.025, massImbalance < 1e-6
 #Re 75, 0.075 m/s , N 8/16, u_rel 0.7, p_rel 0.025, massImbalance < 1e-6
+
+import numpy as np
+import matplotlib.pyplot as plt
 
 uLid = 0.075 # lid velocity = 1 cm/s
 N = 16 # no of cells in each direction
