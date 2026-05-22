@@ -379,8 +379,6 @@ for loop in range(outer):
     if (u_res < tol) and (v_res < tol) and (p_res < tol) and (massImbalance < 1e-6):
         break
 
-vel = np.sqrt(u_new**2 + v_new**2)
-
 breakpoint()
 
 #plot residuals
