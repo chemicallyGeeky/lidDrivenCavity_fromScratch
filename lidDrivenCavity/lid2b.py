@@ -363,17 +363,14 @@ for loop in range(outer):
     v_residual_all.append(v_res)
     p_residual_all.append(p_res)
 
-    #check for convergence
-    if (u_res < tol) and (v_res < tol) and (p_res < tol) and (massImbalance < 1e-6):
-        break
-
     #next outer loop
     u = u_new
     v = v_new
     p = p_new
-                
 
-vel = np.sqrt(u_new**2 + v_new**2)
+    #check for convergence
+    if (u_res < tol) and (v_res < tol) and (p_res < tol) and (massImbalance < 1e-6):
+        break
 
 breakpoint()
 
