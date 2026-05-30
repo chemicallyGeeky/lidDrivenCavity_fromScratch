@@ -6,14 +6,14 @@ import scipy.sparse.linalg as spla
 
 uLid = 0.2 # lid velocity = 1 cm/s
 N = 64 # no of cells in each direction
-len = 0.01 #each side of the sq. cavity
-x = len/N #delta_x
-y = len/N #delta_y
+L = 0.01 #each side of the sq. cavity
+x = L/N #delta_x
+y = L/N #delta_y
 outer = 10000  # number of maximum outer loops
 
 #constants
 nu = 1e-5 # kinematic viscosity
-Re = (len*uLid)/nu
+Re = (L*uLid)/nu
 
 u_rel = 0.7
 p_rel = 0.3
@@ -402,14 +402,14 @@ plt.title('p residuals'); plt.show()
 #plot: colormaps
 #plot - u
 # Create cell center coordinates for the plot boundaries
-x_centers = np.linspace(x / 2, len - x / 2, N)
-y_centers = np.linspace(y / 2, len - y / 2, N)
+x_centers = np.linspace(x / 2, L - x / 2, N)
+y_centers = np.linspace(y / 2, L - y / 2, N)
 
 plt.figure(figsize=(6, 5))
 
 # u.T aligns your [x, y] indexing with imshow's [row, col] requirement
 # origin='lower' ensures j=0 starts at the bottom
-im = plt.imshow(u.T, origin='lower', extent=[0, len, 0, len], cmap='jet')
+im = plt.imshow(u.T, origin='lower', extent=[0, L, 0, L], cmap='jet')
 
 # Add decorations
 plt.colorbar(im, label='X velocity (m/s)')
@@ -426,7 +426,7 @@ plt.figure(figsize=(6, 5))
 
 # v.T aligns your [x, y] indexing with imshow's [row, col] requirement
 # origin='lower' ensures j=0 starts at the bottom
-im = plt.imshow(v.T, origin='lower', extent=[0, len, 0, len], cmap='jet')
+im = plt.imshow(v.T, origin='lower', extent=[0, L, 0, L], cmap='jet')
 
 # Add decorations
 plt.colorbar(im, label='Y velocity (m/s)')
@@ -443,7 +443,7 @@ plt.figure(figsize=(6, 5))
 
 # p.T aligns your [x, y] indexing with imshow's [row, col] requirement
 # origin='lower' ensures j=0 starts at the bottom
-im = plt.imshow(p.T, origin='lower', extent=[0, len, 0, len], cmap='jet')
+im = plt.imshow(p.T, origin='lower', extent=[0, L, 0, L], cmap='jet')
 
 # Add decorations
 plt.colorbar(im, label='Kinematic pressure (m2/s2)')
@@ -468,8 +468,8 @@ plt.streamplot(X, Y, u.T, v.T, color='black', linewidth=1.2, density=1)
 # Add decorations matching your style
 plt.xlabel('X (m)')
 plt.ylabel('Y (m)')
-plt.xlim(0, len)
-plt.ylim(0, len)
+plt.xlim(0, L)
+plt.ylim(0, L)
 plt.title(f'Velocity Fields & Streamlines (Re = {Re}, Grid = {N}x{N})')
 plt.show()
 
@@ -485,8 +485,8 @@ q = plt.quiver(X, Y, u.T, v.T, angles='xy', color='black')
 # Add decorations matching your style
 plt.xlabel('X (m)')
 plt.ylabel('Y (m)')
-plt.xlim(0, len)
-plt.ylim(0, len)
+plt.xlim(0, L)
+plt.ylim(0, L)
 plt.title(f'Velocity Vectors (Re = {Re}, Grid = {N}x{N})')
 plt.show()
 
