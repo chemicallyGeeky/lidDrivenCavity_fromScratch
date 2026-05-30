@@ -1,4 +1,4 @@
-#lid driven cavity with SIMPLE and PWIM, Re 10-75, 4x4-16x16 mesh, implicit relaxation, sparse matrix
+#lid driven cavity with SIMPLE and PWIM, Re 1-200, 64x64 mesh, implicit relaxation, sparse matrix
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
