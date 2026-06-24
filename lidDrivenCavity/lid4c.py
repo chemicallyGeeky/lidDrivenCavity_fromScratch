@@ -1,10 +1,10 @@
-#lid driven cavity with SIMPLE and PWIM, Re 1-200, 64x64 mesh, implicit relaxation, sparse matrix
+#lid driven cavity with SIMPLE and PWIM, implicit relaxation, sparse matrix
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
-uLid = 0.2 # lid velocity = 1 cm/s
+uLid = 1.0 # lid velocity = 1 cm/s
 N = 64 # no of cells in each direction
 L = 0.01 #each side of the sq. cavity
 x = L/N #delta_x
@@ -13,7 +13,7 @@ outer = 10000  # number of maximum outer loops
 
 #constants
 nu = 1e-5 # kinematic viscosity
-Re = (L*uLid)/nu
+Re = np.round((L*uLid)/nu)
 
 u_rel = 0.7
 p_rel = 0.3
@@ -77,76 +77,81 @@ for loop in range(outer):
     for i in range(0, N):
         for j in range(0, N):
             o = N*i + j
+            #the fluxes
+            Fe = ue[i,j]*y
+            Fw = uw[i,j]*y
+            Fn = vn[i,j]*x
+            Fs = vs[i,j]*x
             #CORNERS
             if i == 0 and j == 0:  #left-bot
                 e = o + N
                 n = o + 1
-                uEqn[o, o] = (ue[i,j]*y + vn[i,j]*x + 6 *nu)
-                uEqn[o, e] = - nu
-                uEqn[o, n] = -nu
+                uEqn[o, o] = max(0, Fe) + max(0, Fn) + 6 *nu
+                uEqn[o, e] = - (max(0, -Fe) + nu)
+                uEqn[o, n] = -(max(0, -Fn) + nu)
             elif i == 0 and j == (N-1): #left-top
                 e = o + N
                 s = o - 1
-                uEqn[o, o] = (ue[i,j]*y + 6 *nu)  
-                uEqn[o, e] = -nu
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o, o] = (max(0, Fe) + max(0, -Fs) + 6 *nu)  
+                uEqn[o, e] = -(max(0, -Fe) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
             elif i == (N-1) and j == 0: #right-bot
                 w = o - N
                 n = o + 1
-                uEqn[o, o] = (vn[i,j]*x + 6 *nu)  
-                uEqn[o, w] = -(uw[i,j]*y + nu)
-                uEqn[o, n] = -nu
+                uEqn[o, o] = (max(0, Fn) + max(0, -Fw) + 6 *nu)  
+                uEqn[o, w] = -(max(0, Fw) + nu)
+                uEqn[o, n] = -(max(0, -Fn) + nu)
             elif i == (N-1) and j == (N-1): #right-top
                 o = N*i + j
                 w = o - N
                 s = o - 1
-                uEqn[o , o] = 6*nu
-                uEqn[o, w] = -(uw[i,j]*y + nu)
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o , o] = max(0, -Fw) + max(0, -Fs) + 6*nu
+                uEqn[o, w] = -(max(0, Fw) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
             # SIDES    
             elif i == 0: #left
                 e = o + N
                 n = o + 1
                 s = o - 1
-                uEqn[o , o] = ue[i,j]*y + vn[i,j]*x + 5*nu
-                uEqn[o, e] = -nu
-                uEqn[o, n] = -nu
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o , o] = max(0, Fe) + max(0, Fn) + max(0, -Fs) + 5*nu
+                uEqn[o, e] = -(max(0, -Fe) + nu)
+                uEqn[o, n] = -(max(0, -Fn) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
             elif i == (N-1): #right
                 o = N*i + j
                 w = o - N
                 n = o + 1
                 s = o - 1
-                uEqn[o , o] = vn[i,j]*x + 5*nu
-                uEqn[o, w] = -(uw[i,j]*y + nu)
-                uEqn[o, n] = -nu
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o , o] = max(0, -Fw) + max(0, Fn) + max(0, -Fs) + 5*nu
+                uEqn[o, w] = -(max(0, Fw) + nu)
+                uEqn[o, n] = -(max(0, -Fn) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
             elif j == 0: # bot
                 e = o + N
                 w = o - N
                 n = o + 1
-                uEqn[o , o] = ue[i,j]*y + vn[i,j]*x + 5*nu
-                uEqn[o, e] = -nu
-                uEqn[o, w] = -(uw[i,j]*y + nu)
-                uEqn[o, n] = -nu
+                uEqn[o , o] = max(0, Fe) + max(0, -Fw) + max(0, Fn) + 5*nu
+                uEqn[o, e] = -(max(0, -Fe) + nu)
+                uEqn[o, w] = -(max(0, Fw) + nu)
+                uEqn[o, n] = -(max(0, -Fn)+ nu)
             elif j == (N-1): #top
                 e = o + N
                 w = o - N
                 s = o - 1
-                uEqn[o, o] = (ue[i,j]*y + 5*nu)
-                uEqn[o, e] = -nu
-                uEqn[o, w] =-(uw[i,j]*y + nu)
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o, o] = max(0, Fe) + max(0, -Fw) + max(0, -Fs) + 5*nu
+                uEqn[o, e] = -(max(0, -Fe) + nu)
+                uEqn[o, w] =-(max(0, Fw) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
             else: #inner
                 w = o - N
                 e = o + N
                 s = o - 1
                 n = o + 1
-                uEqn[o, o] = (ue[i,j]*y + vn[i,j]*x + 4*nu)
-                uEqn[o, e] = -nu
-                uEqn[o, w] =-(uw[i,j]*y + nu)
-                uEqn[o, n] = -nu
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o, o] = max(0, Fe) + max(0, -Fw) + max(0, Fn) + max(0, -Fs) + 4*nu
+                uEqn[o, e] = -(max(0, -Fe) + nu)
+                uEqn[o, w] = -(max(0, Fw) + nu)
+                uEqn[o, n] = -(max(0, -Fn) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
 
          
     #bx
@@ -379,6 +384,7 @@ for loop in range(outer):
 
 breakpoint()
 
+#PLOTS
 #plot residuals
 iter = np.arange(loop+1)
 plt.figure(figsize=(8, 4))
@@ -400,57 +406,40 @@ plt.title('p residuals'); plt.show()
 #np.flipud(p.T)
 
 #plot: colormaps
-#plot - u
 # Create cell center coordinates for the plot boundaries
 x_centers = np.linspace(x / 2, L - x / 2, N)
 y_centers = np.linspace(y / 2, L - y / 2, N)
 
+#plot - u
 plt.figure(figsize=(6, 5))
-
 # u.T aligns your [x, y] indexing with imshow's [row, col] requirement
 # origin='lower' ensures j=0 starts at the bottom
 im = plt.imshow(u.T, origin='lower', extent=[0, L, 0, L], cmap='jet')
-
-# Add decorations
 plt.colorbar(im, label='X velocity (m/s)')
 plt.xlabel('X (m)')
 plt.ylabel('Y (m)')
 plt.title(f'Lid-Driven Cavity Velocity (Re = {Re}, Grid = {N}x{N})')
-
-#plt.tight_layout()
 plt.show()
 
 #plot - v
-# Create cell center coordinates for the plot boundaries
 plt.figure(figsize=(6, 5))
-
-# v.T aligns your [x, y] indexing with imshow's [row, col] requirement
-# origin='lower' ensures j=0 starts at the bottom
 im = plt.imshow(v.T, origin='lower', extent=[0, L, 0, L], cmap='jet')
-
-# Add decorations
 plt.colorbar(im, label='Y velocity (m/s)')
 plt.xlabel('X (m)')
 plt.ylabel('Y (m)')
 plt.title(f'Lid-Driven Cavity Velocity (Re = {Re}, Grid = {N}x{N})')
-
 plt.tight_layout()
 plt.show()
 
 #plot - p
-# Create cell center coordinates for the plot boundaries
 plt.figure(figsize=(6, 5))
-
 # p.T aligns your [x, y] indexing with imshow's [row, col] requirement
 # origin='lower' ensures j=0 starts at the bottom
 im = plt.imshow(p.T, origin='lower', extent=[0, L, 0, L], cmap='jet')
-
-# Add decorations
 plt.colorbar(im, label='Kinematic pressure (m2/s2)')
 plt.xlabel('X (m)')
 plt.ylabel('Y (m)')
 plt.title(f'Lid-Driven Cavity Velocity (Re = {Re}, Grid = {N}x{N})')
-
 plt.tight_layout()
 plt.show()
 
@@ -465,7 +454,6 @@ im = plt.contourf(X, Y, vel_magnitude, levels=50, cmap='jet')
 cbar = plt.colorbar(im, label='Velocity Magnitude (m/s)')
 # 4. Overlay the black streamlines to show the vortex paths clearly
 plt.streamplot(X, Y, u.T, v.T, color='black', linewidth=1.2, density=1)
-# Add decorations matching your style
 plt.xlabel('X (m)')
 plt.ylabel('Y (m)')
 plt.xlim(0, L)
@@ -477,12 +465,10 @@ plt.show()
 plt.figure(figsize=(6, 5))
 # Removing scale_units='xy' forces matplotlib to auto-scale arrow lengths visibly
 q = plt.quiver(X, Y, u.T, v.T, angles='xy', color='black')
-
 # 2. Add the Quiver Key (Scale Bar)
 # labelpos='E' puts the text to the East (right) of the arrow
 # coordinates='axes' places it relative to the plot frame (1.05 is slightly outside to the right)
 #plt.quiverkey(q, X=0.85, Y=1.05, U=1, label='1 m/s', labelpos='E', coordinates='axes')
-# Add decorations matching your style
 plt.xlabel('X (m)')
 plt.ylabel('Y (m)')
 plt.xlim(0, L)
@@ -492,3 +478,166 @@ plt.show()
 
 breakpoint()
 
+#line profiles
+def line_profiles(u, v, N, L=0.01, U_lid=0.1):
+    # Non-dimensionalized coordinates (0 to 1)
+    normalized_centers = np.linspace(1/(2*N), 1 - 1/(2*N), N)
+    mid_idx = N // 2
+    
+    # Vertical centerline (x = 0.5): Fix X-index (i), extract all Y-indices (j)
+    u_profile = u[mid_idx, :] / U_lid
+    
+    # Horizontal centerline (y = 0.5): Fix Y-index (j), extract all X-indices (i)
+    v_profile = v[:, mid_idx] / U_lid
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
+
+    # Left: u-velocity along vertical centerline
+    ax1.plot(u_profile, normalized_centers, 'b-', label='Current Solver (Normalized)', linewidth=2)
+    ax1.set_title('Normalized u-velocity (Vertical Centerline)')
+    ax1.set_xlabel('$u / U_{lid}$')
+    ax1.set_ylabel('$y / L$')
+    ax1.grid(True, linestyle='--', alpha=0.5)
+    
+    # Right: v-velocity along horizontal centerline
+    ax2.plot(normalized_centers, v_profile, 'b-', label='Current Solver (Normalized)', linewidth=2)
+    ax2.set_title('Normalized v-velocity (Horizontal Centerline)')
+    ax2.set_xlabel('$x / L$')
+    ax2.set_ylabel('$v / U_{lid}$')
+    ax2.grid(True, linestyle='--', alpha=0.5)
+    
+    plt.tight_layout()
+    plt.show()
+
+line_profiles(u, v, N, L=0.01, U_lid=0.1)
+
+#comparison with Ghia et. al. for Re 100
+
+def plot_ghia_comparison(u, v, N, L=0.01, U_lid=0.1):
+    """
+    Extracts, normalizes, and plots centerline profiles matching the 
+    (i=X, j=Y) grid orientation against Ghia et al. (1982) at Re=100.
+    """
+    # -----------------------------------------------------------------
+    # 1. Ghia et al. (1982) Benchmark Data (Re = 100)
+    # -----------------------------------------------------------------
+    #u velocity across vertical line in the middle
+    y_ghia = np.array([1.0000, 0.9766, 0.9688, 0.9609, 0.9531, 0.8516, 0.7344, 0.6172, 
+                       0.5000, 0.4531, 0.2813, 0.1719, 0.1016, 0.0703, 0.0625, 0.0547, 0.0000])
+    u_ghia = np.array([1.0000, 0.8412, 0.7887, 0.7372, 0.68717, 0.2315, 0.0033, -0.1364, 
+                       -0.2058, -0.2109, -0.1566, -0.1015, -0.0643, -0.04775, -0.0419, -0.0371, 0.0000])
+
+    #v velocity across horizontal line in the middle
+    x_ghia = np.array([1.0000, 0.9688, 0.9609, 0.9531, 0.9453, 0.9063, 0.8594, 0.8047, 
+                       0.5000, 0.2344, 0.2266, 0.1563, 0.0938, 0.0781, 0.0703, 0.0625, 0.0000])
+    v_ghia = np.array([0.0000, -0.05906, -0.0739, -0.0886, -0.10313, -0.16914, -0.22445, -0.24533, 
+                       0.05454, 0.17527, 0.17507, 0.16077, 0.12317, 0.1089, 0.1009, 0.0923, 0.0000])
+
+    # -----------------------------------------------------------------
+    # 2. Extract & Normalize Centerlines (Accounting for i=X, j=Y)
+    # -----------------------------------------------------------------
+    # Non-dimensionalized coordinates (0 to 1)
+    normalized_centers = np.linspace(1/(2*N), 1 - 1/(2*N), N)
+    mid_idx = N // 2
+    
+    # Vertical centerline (x = 0.5): Fix X-index (i), extract all Y-indices (j)
+    u_profile = u[mid_idx, :] / U_lid
+    
+    # Horizontal centerline (y = 0.5): Fix Y-index (j), extract all X-indices (i)
+    v_profile = v[:, mid_idx] / U_lid
+
+    # -----------------------------------------------------------------
+    # 3. Plotting
+    # -----------------------------------------------------------------
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
+
+    # Left: u-velocity along vertical centerline
+    ax1.plot(u_profile, normalized_centers, 'b-', label='Current Solver (Normalized)', linewidth=2)
+    ax1.scatter(u_ghia, y_ghia, color='darkred', marker='o', facecolors='none', s=40, label='Ghia et al. (1982)')
+    ax1.set_title('Normalized u-velocity (Vertical Centerline)')
+    ax1.set_xlabel('$u / U_{lid}$')
+    ax1.set_ylabel('$y / L$')
+    ax1.set_xlim([-0.3, 1.1])
+    ax1.grid(True, linestyle='--', alpha=0.5)
+    ax1.legend()
+
+    # Right: v-velocity along horizontal centerline
+    ax2.plot(normalized_centers, v_profile, 'b-', label='Current Solver (Normalized)', linewidth=2)
+    ax2.scatter(x_ghia, v_ghia, color='darkred', marker='o', facecolors='none', s=40, label='Ghia et al. (1982)')
+    ax2.set_title('Normalized v-velocity (Horizontal Centerline)')
+    ax2.set_xlabel('$x / L$')
+    ax2.set_ylabel('$v / U_{lid}$')
+    ax2.set_ylim([-0.3, 0.3])
+    ax2.grid(True, linestyle='--', alpha=0.5)
+    ax2.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+if Re == 100.0:
+    plot_ghia_comparison(u, v, N)    
+
+breakpoint()
+
+def plot_ghia_comparison_re1000(u, v, N, L=0.01, U_lid=1.0):
+    """
+    Extracts, normalizes, and plots centerline profiles matching the 
+    (i=X, j=Y) grid orientation against Ghia et al. (1982) at Re=1000.
+    """
+    # -----------------------------------------------------------------
+    # 1. Ghia et al. (1982) Benchmark Data (Re = 1000)
+    # -----------------------------------------------------------------
+    y_ghia = np.array([1.0000, 0.9766, 0.9688, 0.9609, 0.9531, 0.8516, 0.7344, 0.6172, 
+                       0.5000, 0.4531, 0.2813, 0.1719, 0.1016, 0.0703, 0.0625, 0.0547, 0.0000])
+    u_ghia = np.array([1.00000, 0.65928, 0.57492, 0.51117, 0.46604, 0.33304, 0.18719, 0.05702, 
+                       -0.06080, -0.10648, -0.27805, -0.38289, -0.29730, -0.22220, -0.20196, -0.18109, 0.00000])
+
+    x_ghia = np.array([1.0000, 0.9688, 0.9609, 0.9531, 0.9453, 0.9063, 0.8594, 0.8047, 
+                       0.5000, 0.2344, 0.2266, 0.1563, 0.0938, 0.0781, 0.0703, 0.0625, 0.0000])
+    v_ghia = np.array([0.00000, -0.21388, -0.27669, -0.33714, -0.39188, -0.51500, -0.42665, -0.31966, 
+                       0.02526, 0.32235, 0.33075, 0.37095, 0.32627, 0.30353, 0.29012, 0.27485, 0.00000])
+
+    # -----------------------------------------------------------------
+    # 2. Extract & Normalize Centerlines (Accounting for i=X, j=Y)
+    # -----------------------------------------------------------------
+    normalized_centers = np.linspace(1/(2*N), 1 - 1/(2*N), N)
+    mid_idx = N // 2
+    
+    # Vertical centerline (x = 0.5): Fix X-index (i), extract all Y-indices (j)
+    u_profile = u[mid_idx, :] / U_lid
+    
+    # Horizontal centerline (y = 0.5): Fix Y-index (j), extract all X-indices (i)
+    v_profile = v[:, mid_idx] / U_lid
+
+    # -----------------------------------------------------------------
+    # 3. Plotting
+    # -----------------------------------------------------------------
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
+
+    # Left: u-velocity along vertical centerline
+    ax1.plot(u_profile, normalized_centers, 'b-', label='Current Solver (Normalized)', linewidth=2)
+    ax1.scatter(u_ghia, y_ghia, color='darkred', marker='o', facecolors='none', s=40, label='Ghia et al. (1982) Re=1000')
+    ax1.set_title('Normalized u-velocity (Vertical Centerline - Re=1000)')
+    ax1.set_xlabel('$u / U_{lid}$')
+    ax1.set_ylabel('$y / L$')
+    ax1.set_xlim([-0.6, 1.1])
+    ax1.grid(True, linestyle='--', alpha=0.5)
+    ax1.legend()
+
+    # Right: v-velocity along horizontal centerline
+    ax2.plot(normalized_centers, v_profile, 'b-', label='Current Solver (Normalized)', linewidth=2)
+    ax2.scatter(x_ghia, v_ghia, color='darkred', marker='o', facecolors='none', s=40, label='Ghia et al. (1982) Re=1000')
+    ax2.set_title('Normalized v-velocity (Horizontal Centerline - Re=1000)')
+    ax2.set_xlabel('$x / L$')
+    ax2.set_ylabel('$v / U_{lid}$')
+    ax2.set_ylim([-0.6, 0.6])
+    ax2.grid(True, linestyle='--', alpha=0.5)
+    ax2.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+if Re == 1000.0:
+    plot_ghia_comparison_re1000(u, v, N)    
+
+breakpoint()    
