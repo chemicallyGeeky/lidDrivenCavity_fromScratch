@@ -11,7 +11,7 @@ comparison plots with Ghia (1982) for Re 100, Re 100 tested with 32x32 mesh.
 lid4c.py: implicit relaxation, sparse matrix, comparison plots with Ghia (1982) for Re 100, 1000.
 Re tested upto 2000 with 64x64 mesh. 
 
-lidGS.py: implicit relaxation, sparse matrix, plot with Ghia (1982) for Re 100.
+lidGS.py: implicit relaxation, sparse matrix, gauss-siedel solvers, plot with Ghia (1982) for Re 100.
 Re 100 tested on a 32x32 mesh.  Slower after that.
 
 
