@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
-uLid = 1.0 # lid velocity = 1 cm/s
+uLid = 2.0 # lid velocity = 1 cm/s
 N = 64 # no of cells in each direction
 L = 0.01 #each side of the sq. cavity
 x = L/N #delta_x
