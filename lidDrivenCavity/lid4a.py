@@ -12,8 +12,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-uLid = 0.075 # lid velocity = 1-75 cm/s
-N = 16 # no of cells in each direction
+uLid = 0.01 # lid velocity = 1-75 cm/s
+N = 64 # no of cells in each direction
 L = 0.01 #each side of the sq. cavity
 x = L/N #delta_x
 y = L/N #delta_y
@@ -23,8 +23,8 @@ outer = 10000  # number of maximum outer loops
 nu = 1e-5 # kinematic viscosity
 Re = (L*uLid)/nu
 
-u_rel = 0.7
-p_rel = 0.025
+u_rel = 0.4
+p_rel = 0.05
 tol = 1e-6
 
 #create arrays and initialize
@@ -81,83 +81,87 @@ for loop in range(outer):
     ue, uw = calculate_u_flux(u)
     vn, vs = calculate_v_flux(v)
     M = N*N
-    # uEqn = lil_matrix(M, M)
     uEqn = np.zeros([M, M])
     for i in range(0, N):
         for j in range(0, N):
             o = N*i + j
+            #the fluxes
+            Fe = ue[i,j]*y
+            Fw = uw[i,j]*y
+            Fn = vn[i,j]*x
+            Fs = vs[i,j]*x
             #CORNERS
             if i == 0 and j == 0:  #left-bot
                 e = o + N
                 n = o + 1
-                uEqn[o, o] = (ue[i,j]*y + vn[i,j]*x + 6 *nu)
-                uEqn[o, e] = - nu
-                uEqn[o, n] = -nu
+                uEqn[o, o] = max(0, Fe) + max(0, Fn) + 6 *nu
+                uEqn[o, e] = - (max(0, -Fe) + nu)
+                uEqn[o, n] = -(max(0, -Fn) + nu)
             elif i == 0 and j == (N-1): #left-top
                 e = o + N
                 s = o - 1
-                uEqn[o, o] = (ue[i,j]*y + 6 *nu)  
-                uEqn[o, e] = -nu
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o, o] = (max(0, Fe) + max(0, -Fs) + 6 *nu)  
+                uEqn[o, e] = -(max(0, -Fe) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
             elif i == (N-1) and j == 0: #right-bot
                 w = o - N
                 n = o + 1
-                uEqn[o, o] = (vn[i,j]*x + 6 *nu)  
-                uEqn[o, w] = -(uw[i,j]*y + nu)
-                uEqn[o, n] = -nu
+                uEqn[o, o] = (max(0, Fn) + max(0, -Fw) + 6 *nu)  
+                uEqn[o, w] = -(max(0, Fw) + nu)
+                uEqn[o, n] = -(max(0, -Fn) + nu)
             elif i == (N-1) and j == (N-1): #right-top
                 o = N*i + j
                 w = o - N
                 s = o - 1
-                uEqn[o , o] = 6*nu
-                uEqn[o, w] = -(uw[i,j]*y + nu)
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o , o] = max(0, -Fw) + max(0, -Fs) + 6*nu
+                uEqn[o, w] = -(max(0, Fw) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
             # SIDES    
             elif i == 0: #left
                 e = o + N
                 n = o + 1
                 s = o - 1
-                uEqn[o , o] = ue[i,j]*y + vn[i,j]*x + 5*nu
-                uEqn[o, e] = -nu
-                uEqn[o, n] = -nu
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o , o] = max(0, Fe) + max(0, Fn) + max(0, -Fs) + 5*nu
+                uEqn[o, e] = -(max(0, -Fe) + nu)
+                uEqn[o, n] = -(max(0, -Fn) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
             elif i == (N-1): #right
                 o = N*i + j
                 w = o - N
                 n = o + 1
                 s = o - 1
-                uEqn[o , o] = vn[i,j]*x + 5*nu
-                uEqn[o, w] = -(uw[i,j]*y + nu)
-                uEqn[o, n] = -nu
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o , o] = max(0, -Fw) + max(0, Fn) + max(0, -Fs) + 5*nu
+                uEqn[o, w] = -(max(0, Fw) + nu)
+                uEqn[o, n] = -(max(0, -Fn) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
             elif j == 0: # bot
                 e = o + N
                 w = o - N
                 n = o + 1
-                uEqn[o , o] = ue[i,j]*y + vn[i,j]*x + 5*nu
-                uEqn[o, e] = -nu
-                uEqn[o, w] = -(uw[i,j]*y + nu)
-                uEqn[o, n] = -nu
+                uEqn[o , o] = max(0, Fe) + max(0, -Fw) + max(0, Fn) + 5*nu
+                uEqn[o, e] = -(max(0, -Fe) + nu)
+                uEqn[o, w] = -(max(0, Fw) + nu)
+                uEqn[o, n] = -(max(0, -Fn)+ nu)
             elif j == (N-1): #top
                 e = o + N
                 w = o - N
                 s = o - 1
-                uEqn[o, o] = (ue[i,j]*y + 5*nu)
-                uEqn[o, e] = -nu
-                uEqn[o, w] =-(uw[i,j]*y + nu)
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o, o] = max(0, Fe) + max(0, -Fw) + max(0, -Fs) + 5*nu
+                uEqn[o, e] = -(max(0, -Fe) + nu)
+                uEqn[o, w] =-(max(0, Fw) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
             else: #inner
                 w = o - N
                 e = o + N
                 s = o - 1
                 n = o + 1
-                uEqn[o, o] = (ue[i,j]*y + vn[i,j]*x + 4*nu)
-                uEqn[o, e] = -nu
-                uEqn[o, w] =-(uw[i,j]*y + nu)
-                uEqn[o, n] = -nu
-                uEqn[o, s] = -(vs[i,j]*x + nu)
+                uEqn[o, o] = max(0, Fe) + max(0, -Fw) + max(0, Fn) + max(0, -Fs) + 4*nu
+                uEqn[o, e] = -(max(0, -Fe) + nu)
+                uEqn[o, w] = -(max(0, Fw) + nu)
+                uEqn[o, n] = -(max(0, -Fn) + nu)
+                uEqn[o, s] = -(max(0, Fs) + nu)
 
-         
+       
     #bx
     bx = np.zeros(M)
     for i in range(N):
@@ -491,6 +495,10 @@ plt.xlim(0, L)
 plt.ylim(0, L)
 plt.title(f'Velocity Vectors (Re = {Re}, Grid = {N}x{N})')
 plt.show()
+
+#
+
+breakpoint()
 
 
 
